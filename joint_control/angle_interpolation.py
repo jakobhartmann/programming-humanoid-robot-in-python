@@ -21,7 +21,12 @@
 
 
 from pid import PIDAgent
+from keyframes import leftBackToStand
+from keyframes import leftBellyToStand
+from keyframes import rightBackToStand
+from keyframes import rightBellyToStand
 from keyframes import hello
+from keyframes import wipe_forehead
 
 
 class AngleInterpolationAgent(PIDAgent):
@@ -32,6 +37,8 @@ class AngleInterpolationAgent(PIDAgent):
                  sync_mode=True):
         super(AngleInterpolationAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.keyframes = ([], [], [])
+        # https://isis.tu-berlin.de/mod/forum/discuss.php?d=285263
+        self.elapsed_time_until_init = self.perception.time
 
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
@@ -42,7 +49,56 @@ class AngleInterpolationAgent(PIDAgent):
         target_joints = {}
         # YOUR CODE HERE
 
+        # parameters for testing
+        allow_repeat_after_first_init = True
+        repeat_standing_up = True
+        repeat_angle_interpolation = False
+
+        if repeat_standing_up and keyframes == ([], [], []):
+            self.elapsed_time_until_init = self.perception.time
+
+        names = keyframes[0]
+        times = keyframes[1]
+        keys = keyframes[2]
+
+        if allow_repeat_after_first_init:
+            time = self.perception.time - self.elapsed_time_until_init
+        else:
+            time = self.perception.time
+
+        for n in range(len(names)):
+            if (time > times[n][-1]):
+                break
+            else:
+                repeat_angle_interpolation = False
+
+            for t in range(len(times[n]) - 1):
+                if (times[n][t] <= time <= times[n][t+1]):
+                    starttime = times[n][t]
+                    endtime = times[n][t+1]
+
+                    # https://isis.tu-berlin.de/mod/forum/discuss.php?d=288132
+                    P_0 = keys[n][t][0]
+                    P_1 = keys[n][t][2][2] + P_0
+                    P_3 = keys[n][t+1][0]
+                    P_2 = keys[n][t+1][1][2] + P_3
+
+                    # https://medium.com/@adrian_cooney/bezier-interpolation-13b68563313a
+                    i = (starttime - time) / (starttime - endtime)
+
+                    # lecture 2, slide 15
+                    B = pow((1 - i), 3) * P_0 + 3 * pow((1 - i), 2) * i * P_1 + 3 * (1 - i) * pow(i, 2) * P_2 + pow(i, 3) * P_3
+                    target_joints[names[n]] = B
+                    break
+
+        if 'LHipYawPitch' in target_joints:
+            target_joints['RHipYawPitch'] = target_joints.get('LHipYawPitch')
+
+        if repeat_angle_interpolation:
+            self.elapsed_time_until_init = self.perception.time
+
         return target_joints
+
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
