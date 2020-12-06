@@ -7,6 +7,12 @@
 
 
 from recognize_posture import PostureRecognitionAgent
+from keyframes import leftBackToStand
+from keyframes import leftBellyToStand
+from keyframes import rightBackToStand
+from keyframes import rightBellyToStand
+from keyframes import hello
+from keyframes import wipe_forehead
 
 
 class StandingUpAgent(PostureRecognitionAgent):
@@ -17,6 +23,20 @@ class StandingUpAgent(PostureRecognitionAgent):
     def standing_up(self):
         posture = self.posture
         # YOUR CODE HERE
+
+        leftBackToStand_classes = ['Back', 'HeadBack', 'Left', 'Sit']
+        leftBellyToStand_classes = ['Belly']
+        rightBackToStand_classes = ['Right']
+
+        if (self.perception.time - self.stiffness_on_off_time) > self.stiffness_off_cycle:
+            if posture in leftBackToStand_classes:
+                self.keyframes = leftBackToStand()
+            elif posture in leftBellyToStand_classes:
+                self.keyframes = leftBellyToStand()
+            elif posture in rightBackToStand_classes:
+                self.keyframes = rightBackToStand()
+        else:
+            self.keyframes = ([], [], [])
 
 
 class TestStandingUpAgent(StandingUpAgent):
@@ -29,7 +49,7 @@ class TestStandingUpAgent(StandingUpAgent):
                  sync_mode=True):
         super(TestStandingUpAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.stiffness_on_off_time = 0
-        self.stiffness_on_cycle = 10  # in seconds
+        self.stiffness_on_cycle = 12  # in seconds
         self.stiffness_off_cycle = 3  # in seconds
 
     def think(self, perception):
