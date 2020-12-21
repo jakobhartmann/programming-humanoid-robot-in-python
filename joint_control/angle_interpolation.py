@@ -94,6 +94,9 @@ class AngleInterpolationAgent(PIDAgent):
         if 'LHipYawPitch' in target_joints:
             target_joints['RHipYawPitch'] = target_joints.get('LHipYawPitch')
 
+        if 'RHipYawPitch' in target_joints:
+            target_joints['LHipYawPitch'] = target_joints.get('RHipYawPitch')
+
         if repeat_angle_interpolation:
             self.elapsed_time_until_init = self.perception.time
 
