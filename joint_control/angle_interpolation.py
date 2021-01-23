@@ -19,6 +19,9 @@
     # preceding the point, the second describes the curve following the point.
 '''
 
+import numpy as np
+import operator
+from functools import reduce
 
 from pid import PIDAgent
 from keyframes import leftBackToStand
@@ -39,6 +42,7 @@ class AngleInterpolationAgent(PIDAgent):
         self.keyframes = ([], [], [])
         # https://isis.tu-berlin.de/mod/forum/discuss.php?d=285263
         self.elapsed_time_until_init = self.perception.time
+        self.keyframes_execution_finished = False
 
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
@@ -99,6 +103,13 @@ class AngleInterpolationAgent(PIDAgent):
 
         if repeat_angle_interpolation:
             self.elapsed_time_until_init = self.perception.time
+        
+        if len(times) > 0:
+            # https://stackoverflow.com/questions/952914/how-to-make-a-flat-list-out-of-list-of-lists
+            times_flattend = reduce(operator.concat, times)
+            times_flattend_max = np.max(times_flattend)
+            if target_joints == {} and ((self.elapsed_time_until_init + times_flattend_max) < self.perception.time):
+                self.keyframes_execution_finished = True
 
         return target_joints
 

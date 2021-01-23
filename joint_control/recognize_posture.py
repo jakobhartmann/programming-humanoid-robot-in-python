@@ -39,6 +39,9 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
         posture = 'unknown'
         # YOUR CODE HERE
 
+        # necessary for distributed computing to work
+        self.posture_classifier = pickle.load(open('joint_control/robot_pose.pkl', 'rb'))  # LOAD YOUR CLASSIFIER
+
         features = np.array(['LHipYawPitch', 'LHipRoll', 'LHipPitch', 'LKneePitch', 'RHipYawPitch', 'RHipRoll', 'RHipPitch', 'RKneePitch'])
         classes = ['Crouch', 'Belly', 'Frog', 'Back', 'Left', 'Right', 'StandInit', 'Stand', 'Knee', 'Sit', 'HeadBack']
         data = np.array([])
