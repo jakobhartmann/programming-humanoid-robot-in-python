@@ -22,16 +22,19 @@ sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', '
 import json
 
 from numpy.matlib import matrix, identity, sin, cos, arcsin, arctan2
-from angle_interpolation import AngleInterpolationAgent
+# from angle_interpolation import AngleInterpolationAgent
+
+# necessary for distributed computing to work (https://isis.tu-berlin.de/mod/forum/discuss.php?d=305275)
+from recognize_posture import PostureRecognitionAgent
 
 
-class ForwardKinematicsAgent(AngleInterpolationAgent):
+class ForwardKinematicsAgent(PostureRecognitionAgent):
     def __init__(self, simspark_ip='localhost',
                  simspark_port=3100,
                  teamname='DAInamite',
                  player_id=0,
                  sync_mode=True):
-        super(ForwardKinematicsAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
+        super(PostureRecognitionAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.transforms = {n: identity(4) for n in self.joint_names}
 
         # chains defines the name of chain and joints of the chain
@@ -45,7 +48,7 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
 
     def think(self, perception):
         self.forward_kinematics(perception.joint)
-        return super(ForwardKinematicsAgent, self).think(perception)
+        return super(PostureRecognitionAgent, self).think(perception)
 
     def translation(self, x, y, z):
         return matrix([[1, 0, 0, x],
