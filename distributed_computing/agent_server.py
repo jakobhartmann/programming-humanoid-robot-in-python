@@ -22,24 +22,16 @@ import threading
 import numpy as np
 
 
-# https://docs.python.org/3/library/xmlrpc.client.html#module-xmlrpc.client
-class RPCServer(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-
-    def run(self):
-        server = SimpleXMLRPCServer(('localhost', 8000), allow_none=True)
-        print("Listening on port 8000...")
-        server.register_instance(ServerAgent)
-        server.serve_forever()
-
-
 class ServerAgent(InverseKinematicsAgent):
     '''ServerAgent provides RPC service
     '''
     # YOUR CODE HERE
-    rpc = RPCServer()
-    rpc.start()
+    # https://docs.python.org/3/library/xmlrpc.client.html#module-xmlrpc.client
+    def rpcserver(self):
+        server = SimpleXMLRPCServer(('localhost', 8000), allow_none=True)
+        print("Listening on port 8000...")
+        server.register_instance(self)
+        server.serve_forever()
 
     def get_angle(self, joint_name):
         '''get sensor value of given joint'''
@@ -89,5 +81,6 @@ class ServerAgent(InverseKinematicsAgent):
 
 if __name__ == '__main__':
     agent = ServerAgent()
+    threading.Thread(target=agent.rpcserver).start()
     agent.run()
 
